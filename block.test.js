@@ -1,4 +1,3 @@
-const { it } = require("node:test");
 const Block = require("./block");
 const { GENESIS_DATA } = require("./config");
 const cryptoHash = require("./crypto_hash");
@@ -46,7 +45,7 @@ describe("Block", () => {
             expect(minedBlock.data).toEqual(data)
         })
 
-        test("sets a `timestamp`", () => {
+        it("sets a `timestamp`", () => {
             expect(minedBlock.timestamp).not.toEqual(undefined)
         })
 
