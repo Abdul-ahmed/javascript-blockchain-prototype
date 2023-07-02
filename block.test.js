@@ -1,19 +1,25 @@
+const hexToBinary = require('hex-to-binary')
 const Block = require("./block");
-const { GENESIS_DATA } = require("./config");
+const { GENESIS_DATA, MINE_RATE } = require("./config");
 const cryptoHash = require("./crypto_hash");
 
 describe("Block", () => {
-    const timestamp = "2023/06/30";
+    const timestamp = 2000;
     const previousHash = "previous hash";
     const hash = "hash";
     const data = "block data";
-    const block = new Block({ timestamp, previousHash, hash, data });
+    const nonce = 1;
+    const difficulty = 1;
 
-    it("Has a timestamp, previous hash, hash, and data property", () => {
+    const block = new Block({ timestamp, previousHash, hash, data, nonce, difficulty });
+
+    it("Has a timestamp, previous hash, hash, data property, nonce and difficulty level", () => {
         expect(block.timestamp).toEqual(timestamp);
         expect(block.previousHash).toEqual(previousHash);
         expect(block.hash).toEqual(hash);
         expect(block.data).toEqual(data);
+        expect(block.nonce).toEqual(nonce);
+        expect(block.difficulty).toEqual(difficulty);
     });
 
     describe("genesis()", () => {
@@ -50,7 +56,43 @@ describe("Block", () => {
         })
 
         it("create sha-256 `hash` based on the proper input", () => {
-            expect(minedBlock.hash).toEqual(cryptoHash(minedBlock.timestamp, minedBlock.previousHash, data))
+            expect(minedBlock.hash).toEqual(cryptoHash(
+                minedBlock.timestamp,
+                minedBlock.nonce,
+                minedBlock.difficulty,
+                previousBlock.hash,
+                data
+            ))
+        })
+
+        it("sets a `hash` that matches the difficulty criteria", () => {
+            expect(hexToBinary(minedBlock.hash).substring(0, minedBlock.difficulty)).toEqual("0".repeat(minedBlock.difficulty))
+        })
+
+        it("adjusts the difficulty", () => {
+            const possibleResult = [previousBlock.difficulty + 1, previousBlock - 1]
+            expect(possibleResult.includes(minedBlock.difficulty)).toBe(true)
+        })
+    })
+
+    describe("adjustDifficulty()", () => {
+        it("raises the difficulty for a quickly mined block", () => {
+            expect(Block.adjustDifficulty({
+                originalBlock: block,
+                timestamp: block.timestamp + MINE_RATE - 100
+            })).toEqual(block.difficulty + 1)
+        })
+
+        it("lower the difficulty for a quickly mined block", () => {
+            expect(Block.adjustDifficulty({
+                originalBlock: block,
+                timestamp: block.timestamp + MINE_RATE + 100
+            })).toEqual(block.difficulty - 1)
+        })
+
+        it("has lower limit of 1", () => {
+            block.difficulty = -1
+            expect(Block.adjustDifficulty({originalBlock: block})).toEqual(1)
         })
     })
 });
