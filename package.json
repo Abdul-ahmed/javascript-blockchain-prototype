@@ -8,7 +8,7 @@
     "start": "node index.js",
     "dev": "npm run start-pubnub && nodemon index.js",
     "dev-peer": "cross-env GENERATE_PEER_PORT='true' nodemon index.js",
-    "start-pubnub": "node pubsub.pubnub.js"
+    "start-pubnub": "node app/pubsub.pubnub.js"
   },
   "author": "",
   "license": "ISC",
